@@ -24,6 +24,13 @@ void consoleClearTop(bool KeepTopSelected) {
 	if (!KeepTopSelected)SelectBotConsole();
 }
 
+void PrintToTop(const char* Message) {
+	if (!TopSelected) { SelectTopConsole(); TopSelected = true; }
+	printf(Message);
+	SelectBotConsole();
+	TopSelected = false;
+}
+
 void PrintToTop(const char* Message, int data, bool clearScreen) {
 	if (!TopSelected) { SelectTopConsole(); TopSelected = true; }
 	if (clearScreen)consoleClear();

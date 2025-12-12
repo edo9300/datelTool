@@ -15,9 +15,9 @@
 #define SECTOR_SIZE (u32)0x1000
 
 extern void consoleClearTop(bool KeepTopSelected);
+extern void PrintToTop(const char* Message);
 extern void PrintToTop(const char* Message, int data, bool clearScreen);
 extern void PrintToTop(const char* Message, const char* SecondMessage, bool clearScreen);
-
 extern uint8_t productType;
 
 DTCM_DATA u32 NUM_SECTORS = 0x200;
@@ -48,6 +48,8 @@ DTCM_DATA const char* ValidPaths[] = {
 const char* DumpFilePath() {
 	switch (productType) {
 		case ACTION_REPLAY_DS: 
+			return ValidPaths[1];
+		case ACTION_REPLAY_DS_2: 
 			return ValidPaths[1];
 		case GAMES_N_MUSIC:
 			return ValidPaths[2];
@@ -248,7 +250,10 @@ void vblankHandler (void) {
 	}
 	
 	if (isDSi) {
-		if (!cardEjected && REG_SCFG_MC == 0x11)cardEjected = true;
+		if (!cardEjected && REG_SCFG_MC == 0x11) {
+			consoleClearTop(false);
+			cardEjected = true;
+		}
 	}/* else { // Causes screen flicker if used here.
 		if (!activeIO && cardEjected)cardEjected = CardIsPresent();
 	}*/
@@ -260,6 +265,9 @@ void DoCardWait() {
 		WaitForNewCard();
 		consoleClear();
 		if(CardInit() != 0xFFFF) return;
+		consoleClearTop(false);
+		PrintToTop("Cart Chip Id: %4X \n\n", checkFlashID(), true);
+		PrintToTop("Cart Type: UNKNOWN");
 		printf("Not a supported cart!\n\nInsert it again...");
 	}
 }

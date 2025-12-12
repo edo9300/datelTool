@@ -32,12 +32,15 @@
 #define SECTOR_ERASE_COMMAND getSectorEraseComman()
 
 uint8_t productType = ACTION_REPLAY_DS;
+uint16_t currentChipID = 0xFFFF;
 
 const char* productName() {
 	switch(productType) {
 		case GAMES_N_MUSIC:
 			return "GAMES n' MUSIC";
 		case ACTION_REPLAY_DS:
+			return "ACTION REPLAY";
+		case ACTION_REPLAY_DS_2:
 			return "ACTION REPLAY";
 	}
 	return "UNKNOWN";
@@ -49,6 +52,8 @@ static inline uint16_t getMainAddr() {
 			return 0x5555;
 		case ACTION_REPLAY_DS:
 			return 0x0AAA;
+		case ACTION_REPLAY_DS_2:
+			return 0x5555;
 	}
 	return 0;
 }
@@ -63,6 +68,8 @@ static inline uint8_t getSectorEraseComman() {
 			return 0x30;
 		case ACTION_REPLAY_DS:
 			return 0x50;
+		case ACTION_REPLAY_DS_2:
+			return 0x30;
 	}
 	return 0;
 }
@@ -72,8 +79,8 @@ uint16_t getFlashSectorsCount() {
 		case GAMES_N_MUSIC:
 			return 128;
 		case ACTION_REPLAY_DS:
-			// return 128;
-			// return 512; // Flashing full chip disabled until corruption issue is found. // Dumps mirror at 256 sector count. Possible cause?
+			return 256;
+		case ACTION_REPLAY_DS_2:
 			return 256;
 	}
 	return 128;
@@ -89,6 +96,10 @@ static constexpr std::array gnm_flash_ids {
 static constexpr std::array ards_flash_ids {
 	uint16_t{0xC8BF},
 	uint16_t{0xC9BF},
+};
+
+static constexpr std::array ards2_flash_ids {
+	uint16_t{0xD8BF},
 };
 
 inline void writeSpiByte(uint8_t byte) {
@@ -285,6 +296,17 @@ uint16_t init() {
 	if(auto chip_id = readChipID(); std::find(ards_flash_ids.begin(), ards_flash_ids.end(), chip_id) != ards_flash_ids.end()) {
 		return chip_id;
 	}
+	
+	productType = ACTION_REPLAY_DS_2;
+	if(auto chip_id = readChipID(); std::find(ards2_flash_ids.begin(), ards2_flash_ids.end(), chip_id) != ards2_flash_ids.end()) {
+		return chip_id;
+	}
+	
 	return 0xFFFF;
+}
+
+uint16_t checkFlashID() {
+	openSpi(0);
+	return readChipID();
 }
 
